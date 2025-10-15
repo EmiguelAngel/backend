@@ -1,13 +1,26 @@
 package com.sistemaventas.backend.controller;
 
-import com.sistemaventas.backend.dto.request.VentaRequest;
-import com.sistemaventas.backend.dto.response.VentaResponse;
-import com.sistemaventas.backend.facade.VentasFacade;
-import jakarta.validation.Valid;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.sistemaventas.backend.dto.request.VentaRequest;
+import com.sistemaventas.backend.dto.response.VentaResponse;
+import com.sistemaventas.backend.facade.VentasFacade;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/ventas")
@@ -17,14 +30,24 @@ public class VentasController {
     @Autowired
     private VentasFacade ventasFacade;
     
+    @Autowired
+    private com.sistemaventas.backend.service.UsuarioService usuarioService;
+    
+    @Autowired
+    private com.sistemaventas.backend.service.ProductoService productoService;
+    
     /**
      * POST /api/ventas/procesar
      * Endpoint principal que usa el PATRÓN FACADE para procesar una venta completa
      */
     @PostMapping("/procesar")
-    public ResponseEntity<VentaResponse> procesarVenta(@Valid @RequestBody VentaRequest ventaRequest) {
+    public ResponseEntity<VentaResponse> procesarVenta(@RequestBody VentaRequest ventaRequest) {
         try {
-            System.out.println("🛒 Recibida solicitud de venta para usuario: " + ventaRequest.getIdUsuario());
+            System.out.println("🛒 === LOGS DE DEPURACIÓN ===");
+            System.out.println("Request recibido: " + ventaRequest);
+            System.out.println("ID Usuario: " + ventaRequest.getIdUsuario());
+            System.out.println("Items count: " + (ventaRequest.getItems() != null ? ventaRequest.getItems().size() : "null"));
+            System.out.println("Datos de pago: " + ventaRequest.getDatosPago());
             
             VentaResponse response = ventasFacade.procesarVenta(ventaRequest);
             
@@ -36,9 +59,58 @@ public class VentasController {
             
         } catch (Exception e) {
             System.err.println("❌ Error en controlador de ventas: " + e.getMessage());
+            //            e.printStackTrace();
             VentaResponse errorResponse = new VentaResponse("ERROR", "Error interno del servidor: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
+    
+    /**
+     * Endpoint de prueba para diagnosticar problemas
+     */
+    @PostMapping("/test-simple")
+    public ResponseEntity<String> testSimple(@RequestBody VentaRequest ventaRequest) {
+        try {
+            System.out.println("🛒 === TEST SIMPLE ===");
+            System.out.println("VentaRequest: " + ventaRequest);
+            
+            // Verificar usuario
+            var usuario = usuarioService.buscarPorId(ventaRequest.getIdUsuario());
+            System.out.println("Usuario encontrado: " + usuario.isPresent());
+            
+            // Verificar productos
+            if (ventaRequest.getItems() != null) {
+                for (var item : ventaRequest.getItems()) {
+                    var producto = productoService.buscarPorId(item.getIdProducto());
+                    System.out.println("Producto " + item.getIdProducto() + " encontrado: " + producto.isPresent());
+                }
+            }
+            
+            return ResponseEntity.ok("✅ Verificaciones básicas completadas");
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error en test simple: " + e.getMessage());
+            // e.printStackTrace();
+            return ResponseEntity.badRequest().body("❌ Error: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Manejador de errores de validación
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<VentaResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
+        List<String> errors = ex.getBindingResult()
+            .getFieldErrors()
+            .stream()
+            .map(FieldError::getDefaultMessage)
+            .collect(Collectors.toList());
+        
+        System.err.println("❌ Errores de validación: " + errors);
+        
+        String errorMessage = "Errores de validación: " + String.join(", ", errors);
+        VentaResponse errorResponse = new VentaResponse("ERROR", errorMessage);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
     
     /**

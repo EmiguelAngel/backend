@@ -48,8 +48,12 @@ public class Usuario {
     @Column(name = "TELEFONO", length = 20)
     private String telefono;
     
+    // Campo directo para el ID del rol (facilita el mapeo desde el frontend)
+    @Column(name = "IDROL")
+    private Integer idRol;
+    
      @ManyToOne(fetch = FetchType.EAGER) // Cambiar de LAZY a EAGER
-     @JoinColumn(name = "IDROL", referencedColumnName = "IDROL")
+     @JoinColumn(name = "IDROL", referencedColumnName = "IDROL", insertable = false, updatable = false)
      private Rol rol;
 
 @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -82,6 +86,18 @@ private List<Factura> facturas = new ArrayList<>();
     
     public void setRol(Rol rol) {
         this.rol = rol;
+        // Sincronizar el idRol con el rol
+        if (rol != null) {
+            this.idRol = rol.getIdRol();
+        }
+    }
+    
+    public Integer getIdRol() {
+        return idRol;
+    }
+    
+    public void setIdRol(Integer idRol) {
+        this.idRol = idRol;
     }
     
     public String getNombre() {
