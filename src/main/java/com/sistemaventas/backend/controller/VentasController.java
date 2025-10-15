@@ -36,6 +36,9 @@ public class VentasController {
     @Autowired
     private com.sistemaventas.backend.service.ProductoService productoService;
     
+    @Autowired
+    private com.sistemaventas.backend.service.FacturaService facturaService;
+    
     /**
      * POST /api/ventas/procesar
      * Endpoint principal que usa el PATRÓN FACADE para procesar una venta completa
@@ -62,6 +65,21 @@ public class VentasController {
             //            e.printStackTrace();
             VentaResponse errorResponse = new VentaResponse("ERROR", "Error interno del servidor: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+    
+    /**
+     * GET /api/ventas - Obtener todas las ventas (facturas)
+     * Necesario para el dashboard y reportes
+     */
+    @GetMapping
+    public ResponseEntity<List<com.sistemaventas.backend.entity.Factura>> obtenerTodasLasVentas() {
+        try {
+            List<com.sistemaventas.backend.entity.Factura> facturas = facturaService.obtenerTodasLasFacturas();
+            return ResponseEntity.ok(facturas);
+        } catch (Exception e) {
+            System.err.println("❌ Error obteniendo facturas: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
     
