@@ -68,6 +68,19 @@ public class FacturaService {
         return facturaRepository.findById(id);
     }
     
+    // Obtener factura completa con detalles para PDF
+    public Factura obtenerFacturaCompleta(Long id) {
+        Optional<Factura> facturaOpt = facturaRepository.findById(id.intValue());
+        if (facturaOpt.isPresent()) {
+            Factura factura = facturaOpt.get();
+            // Las relaciones deberían cargarse automáticamente por JPA
+            // Si no, podrías forzar la carga con:
+            // Hibernate.initialize(factura.getDetallesFactura());
+            return factura;
+        }
+        return null;
+    }
+    
     // Buscar facturas por usuario
     public List<Factura> buscarPorUsuario(Integer idUsuario) {
         return facturaRepository.findByUsuarioId(idUsuario);

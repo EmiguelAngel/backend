@@ -98,7 +98,10 @@ public class DetalleFactura {
     
     public void setCantidad(Integer cantidad) {
         this.cantidad = cantidad;
-        this.subtotal = this.precioUnitario.multiply(new BigDecimal(cantidad));
+        // Solo calcular si ambos valores existen
+        if (this.precioUnitario != null && cantidad != null) {
+            this.subtotal = this.precioUnitario.multiply(new BigDecimal(cantidad));
+        }
     }
     
     public BigDecimal getPrecioUnitario() {
@@ -107,7 +110,10 @@ public class DetalleFactura {
     
     public void setPrecioUnitario(BigDecimal precioUnitario) {
         this.precioUnitario = precioUnitario;
-        this.subtotal = precioUnitario.multiply(new BigDecimal(this.cantidad));
+        // Solo calcular si ambos valores existen
+        if (precioUnitario != null && this.cantidad != null) {
+            this.subtotal = precioUnitario.multiply(new BigDecimal(this.cantidad));
+        }
     }
     
     public BigDecimal getSubtotal() {
@@ -120,7 +126,11 @@ public class DetalleFactura {
     
     // Método de utilidad para calcular subtotal automáticamente
     public void calcularSubtotal() {
-        this.subtotal = this.precioUnitario.multiply(new BigDecimal(this.cantidad));
+        if (this.precioUnitario != null && this.cantidad != null) {
+            this.subtotal = this.precioUnitario.multiply(new BigDecimal(this.cantidad));
+        } else {
+            this.subtotal = BigDecimal.ZERO;
+        }
     }
     
     @Override

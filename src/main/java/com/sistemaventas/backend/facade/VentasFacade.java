@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.sistemaventas.backend.dto.request.VentaRequest;
 import com.sistemaventas.backend.dto.response.VentaResponse;
@@ -34,7 +33,6 @@ import com.sistemaventas.backend.service.UsuarioService;
  * - InventarioNotificationService (notificaciones Observer)
  */
 @Service
-@Transactional
 public class VentasFacade {
     
     @Autowired
@@ -65,6 +63,7 @@ public class VentasFacade {
      * MÉTODO PRINCIPAL DEL FACADE
      * Procesa una venta completa coordinando todos los servicios necesarios
      */
+    @org.springframework.transaction.annotation.Transactional
     public VentaResponse procesarVenta(VentaRequest ventaRequest) {
         System.out.println("🛒 === INICIANDO PROCESAMIENTO DE VENTA ===");
         System.out.println("Usuario: " + ventaRequest.getIdUsuario());
@@ -81,24 +80,28 @@ public class VentasFacade {
             BigDecimal subtotal = calcularSubtotal(detallesValidados);
             System.out.println("✅ Productos validados - Subtotal: $" + subtotal);
             
-            // PASO 3: Crear factura con detalles
+            // PASO 3: Crear factura con detalles (sin guardar aún)
             Factura factura = crearFactura(usuario, detallesValidados, subtotal);
-            System.out.println("✅ Factura creada - ID: " + factura.getIdFactura() + ", Total: $" + factura.getTotal());
+            System.out.println("✅ Factura creada - ID temporal: " + factura.getIdFactura() + ", Total: $" + factura.getTotal());
             
-            // PASO 4: Procesar pago
-            Pago pago = procesarPago(ventaRequest.getDatosPago(), factura.getTotal(), factura);
-            factura.setIdPago(pago.getIdPago());
+            // PASO 4: Guardar factura primero (necesaria para el pago)
+            Factura facturaGuardada = facturaService.guardarFactura(factura);
+            System.out.println("✅ Factura guardada - ID final: " + facturaGuardada.getIdFactura());
+            
+            // PASO 5: Procesar pago (ahora con factura ya persistida)
+            Pago pago = procesarPago(ventaRequest.getDatosPago(), facturaGuardada.getTotal(), facturaGuardada);
             System.out.println("✅ Pago procesado - Método: " + pago.getMetodoPago());
             
-            // PASO 5: Actualizar inventario y notificar observadores
+            // PASO 6: Actualizar la factura con el ID del pago
+            facturaGuardada.setIdPago(pago.getIdPago());
+            facturaGuardada = facturaService.guardarFactura(facturaGuardada);
+            System.out.println("✅ Factura actualizada con pago");
+            
+            // PASO 7: Actualizar inventario y notificar observadores
             actualizarInventarioYNotificar(detallesValidados);
             System.out.println("✅ Inventario actualizado y notificaciones enviadas");
             
-            // PASO 6: Guardar factura final
-            Factura facturaGuardada = facturaService.guardarFactura(factura);
-            System.out.println("✅ Factura guardada exitosamente");
-            
-            // PASO 7: Crear respuesta exitosa
+            // PASO 8: Crear respuesta exitosa
             VentaResponse response = new VentaResponse(facturaGuardada, pago);
             
             System.out.println("🎉 === VENTA PROCESADA EXITOSAMENTE ===");
@@ -107,10 +110,15 @@ public class VentasFacade {
             
             return response;
             
+        } catch (RuntimeException e) {
+            System.err.println("❌ Error de negocio procesando venta: " + e.getMessage());
+            // Para errores de negocio, no hacer rollback, solo devolver error
+            throw e;  // Re-lanzar para que el controlador lo maneje
         } catch (Exception e) {
-            System.err.println("❌ Error procesando venta: " + e.getMessage());
-            // En caso de error, Spring manejará el rollback automáticamente por @Transactional
-            return new VentaResponse("ERROR", "Error al procesar la venta: " + e.getMessage());
+            System.err.println("❌ Error técnico procesando venta: " + e.getMessage());
+            e.printStackTrace();
+            // Para errores técnicos, hacer rollback
+            throw new RuntimeException("Error técnico en el procesamiento: " + e.getMessage(), e);
         }
     }
     
@@ -141,6 +149,8 @@ public class VentasFacade {
         List<DetalleValidado> detallesValidados = new ArrayList<>();
         
         for (VentaRequest.ItemVenta item : items) {
+            System.out.println("🔍 Procesando item - Producto ID: " + item.getIdProducto() + ", Cantidad: " + item.getCantidad());
+            
             // Buscar producto
             Optional<Producto> productoOpt = productoService.buscarPorId(item.getIdProducto());
             
@@ -149,6 +159,26 @@ public class VentasFacade {
             }
             
             Producto producto = productoOpt.get();
+            System.out.println("📦 Producto encontrado: " + producto.getDescripcion());
+            System.out.println("💰 Precio unitario: " + producto.getPrecioUnitario());
+            System.out.println("📊 Stock disponible: " + producto.getCantidadDisponible());
+            
+            // Validar que el producto tiene precio
+            if (producto.getPrecioUnitario() == null) {
+                System.err.println("❌ ERROR: Producto sin precio - " + producto.getDescripcion() + " (ID: " + producto.getIdProducto() + ")");
+                throw new RuntimeException(
+                        "El producto '%s' (ID: %d) no tiene precio configurado".formatted(
+                                producto.getDescripcion(), producto.getIdProducto())
+                );
+            }
+            
+            // Validar que el precio es positivo
+            if (producto.getPrecioUnitario().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new RuntimeException(
+                        "El producto '%s' tiene un precio inválido: $%s".formatted(
+                                producto.getDescripcion(), producto.getPrecioUnitario())
+                );
+            }
             
             // Validar stock disponible
             if (!producto.tieneStockSuficiente(item.getCantidad())) {
