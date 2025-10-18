@@ -1,7 +1,8 @@
 package com.sistemaventas.backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,6 +43,13 @@ public class Pago {
     @DecimalMin(value = "0.0", message = "El monto debe ser mayor a 0")
     @NotNull(message = "El monto es obligatorio")
     private BigDecimal monto;
+    
+    // Datos del titular/comprador (para tarjetas)
+    @Column(name = "NUMERO_TARJETA", length = 20)
+    private String numeroTarjeta;
+    
+    @Column(name = "NOMBRE_TITULAR", length = 100)
+    private String nombreTitular;
     
     // Constructores
     public Pago() {}
@@ -84,6 +92,22 @@ public class Pago {
     
     public void setMonto(BigDecimal monto) {
         this.monto = monto;
+    }
+    
+    public String getNumeroTarjeta() {
+        return numeroTarjeta;
+    }
+    
+    public void setNumeroTarjeta(String numeroTarjeta) {
+        this.numeroTarjeta = numeroTarjeta;
+    }
+    
+    public String getNombreTitular() {
+        return nombreTitular;
+    }
+    
+    public void setNombreTitular(String nombreTitular) {
+        this.nombreTitular = nombreTitular;
     }
     
     @Override

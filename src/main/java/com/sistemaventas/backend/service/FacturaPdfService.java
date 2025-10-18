@@ -62,6 +62,19 @@ public class FacturaPdfService {
                 infoTable.addCell(createInfoCell("Email:", factura.getUsuario().getCorreo()));
             }
             
+            // Información del pago y titular (si existe)
+            if (factura.getPago() != null) {
+                infoTable.addCell(createInfoCell("Método de Pago:", factura.getPago().getMetodoPago()));
+                
+                // Datos del titular si es pago con tarjeta
+                if (factura.getPago().getNombreTitular() != null) {
+                    infoTable.addCell(createInfoCell("Titular:", factura.getPago().getNombreTitular()));
+                }
+                if (factura.getPago().getNumeroTarjeta() != null) {
+                    infoTable.addCell(createInfoCell("Tarjeta:", factura.getPago().getNumeroTarjeta()));
+                }
+            }
+            
             document.add(infoTable);
             document.add(new Paragraph(" ").setMarginBottom(10)); // Espacio
             

@@ -23,6 +23,10 @@ public class VentaResponse {
     private String estado;
     private String mensaje;
     
+    // Datos del comprador/titular
+    private String nombreTitular;
+    private String numeroTarjetaEnmascarado;
+    
     // Constructores
     public VentaResponse() {}
     
@@ -39,6 +43,12 @@ public class VentaResponse {
                 .collect(Collectors.toList());
         this.estado = "EXITOSA";
         this.mensaje = "Venta procesada correctamente";
+        
+        // Datos del comprador/titular (si existen)
+        if (pago != null) {
+            this.nombreTitular = pago.getNombreTitular();
+            this.numeroTarjetaEnmascarado = pago.getNumeroTarjeta();
+        }
     }
     
     // Constructor para errores
@@ -128,6 +138,22 @@ public class VentaResponse {
         this.mensaje = mensaje;
     }
     
+    public String getNombreTitular() {
+        return nombreTitular;
+    }
+    
+    public void setNombreTitular(String nombreTitular) {
+        this.nombreTitular = nombreTitular;
+    }
+    
+    public String getNumeroTarjetaEnmascarado() {
+        return numeroTarjetaEnmascarado;
+    }
+    
+    public void setNumeroTarjetaEnmascarado(String numeroTarjetaEnmascarado) {
+        this.numeroTarjetaEnmascarado = numeroTarjetaEnmascarado;
+    }
+    
     @Override
     public String toString() {
         return "VentaResponse{" +
@@ -136,6 +162,8 @@ public class VentaResponse {
                 ", fecha=" + fecha +
                 ", total=" + total +
                 ", metodoPago='" + metodoPago + '\'' +
+                ", nombreTitular='" + nombreTitular + '\'' +
+                ", numeroTarjetaEnmascarado='" + numeroTarjetaEnmascarado + '\'' +
                 ", estado='" + estado + '\'' +
                 '}';
     }

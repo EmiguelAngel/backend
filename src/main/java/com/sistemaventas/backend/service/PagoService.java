@@ -41,6 +41,19 @@ public class PagoService {
             pago.setMetodoPago(datosPago.getMetodoPago());
             pago.setMonto(monto);
             
+            // Agregar datos del titular si es pago con tarjeta
+            String metodo = datosPago.getMetodoPago().toLowerCase();
+            if (metodo.contains("tarjeta") || metodo.contains("credito") || metodo.contains("debito")) {
+                pago.setNombreTitular(datosPago.getNombreTitular());
+                // Solo almacenar los últimos 4 dígitos por seguridad
+                if (datosPago.getNumeroTarjeta() != null) {
+                    String numeroTarjeta = datosPago.getNumeroTarjeta().replaceAll("\\s", "");
+                    if (numeroTarjeta.length() >= 4) {
+                        pago.setNumeroTarjeta("****" + numeroTarjeta.substring(numeroTarjeta.length() - 4));
+                    }
+                }
+            }
+            
             return pagoRepository.save(pago);
             
         } catch (IllegalArgumentException e) {
