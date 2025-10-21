@@ -16,6 +16,11 @@ import com.sistemaventas.backend.repository.PagoRepository;
 
 @Service
 @Transactional
+/**
+ * Service (Business layer): contiene la lógica de procesamiento de pagos.
+ * En el patrón MVC esta capa implementa la lógica de negocio y actúa como
+ * intermediaria entre los controladores (HTTP) y los repositorios (persistencia).
+ */
 public class PagoService {
     
     @Autowired

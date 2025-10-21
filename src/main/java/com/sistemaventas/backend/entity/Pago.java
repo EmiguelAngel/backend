@@ -22,6 +22,11 @@ import jakarta.validation.constraints.Size;
 @SuppressWarnings("")
 @Entity
 @Table(name = "PAGO")
+/**
+ * Entity (Model in MVC): representa información del pago asociado a una factura.
+ * Aquí se guardan método de pago, monto y (opcionalmente) datos enmascarados
+ * del titular/últimos 4 dígitos de la tarjeta.
+ */
 public class Pago {
     
     @Id

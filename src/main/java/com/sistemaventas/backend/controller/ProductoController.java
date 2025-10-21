@@ -25,6 +25,11 @@ import com.sistemaventas.backend.service.ProductoService;
 
 import jakarta.validation.Valid;
 
+/**
+ * Controller (C in MVC): expone endpoints REST para operaciones sobre productos.
+ * Actúa como la "vista/controlador" de la capa web — recibe HTTP, llama al servicio
+ * y devuelve DTOs al cliente (frontend).
+ */
 @RestController
 @RequestMapping("/api/productos")
 @CrossOrigin(origins = "http://localhost:4200")

@@ -16,6 +16,11 @@ import com.sistemaventas.backend.repository.FacturaRepository;
 @Service
 @Transactional
 public class FacturaService {
+    /**
+     * Service (Business layer): Responsable de la persistencia y validación
+     * de facturas. En MVC esta capa representa la lógica del modelo (no la
+     * estructura de datos) y coordina con repositorios.
+     */
     
     @Autowired
     private FacturaRepository facturaRepository;

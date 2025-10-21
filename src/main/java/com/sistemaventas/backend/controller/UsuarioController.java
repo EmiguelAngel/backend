@@ -22,6 +22,10 @@ import com.sistemaventas.backend.service.UsuarioService;
 
 import jakarta.validation.Valid;
 
+/**
+ * Controller (C in MVC): Endpoints para gestión de usuarios. Recibe solicitudes HTTP
+ * relacionadas con usuarios, delega a la capa de servicio y retorna entidades/DTOs.
+ */
 @RestController
 @RequestMapping("/api/usuarios")
 @CrossOrigin(origins = "http://localhost:4200") // Para Angular

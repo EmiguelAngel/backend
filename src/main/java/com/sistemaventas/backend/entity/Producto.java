@@ -20,6 +20,9 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "PRODUCTO")
+/**
+ * Entity (Model in MVC): representa los productos disponibles en inventario.
+ */
 public class Producto {
     
     @Id

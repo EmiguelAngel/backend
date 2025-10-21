@@ -27,6 +27,12 @@ import com.sistemaventas.backend.service.FacturaPdfService;
 
 import jakarta.validation.Valid;
 
+/**
+ * Controller (C in MVC): Endpoints para el flujo de ventas (checkout).
+ * Este controlador usa un Facade (`VentasFacade`) para orquestar la lógica
+ * (servicios, repositorios, creación de factura). En MVC, el modelo está
+ * representado por las entidades/DTOs y la vista por el frontend (Angular).
+ */
 @RestController
 @RequestMapping("/api/ventas")
 @CrossOrigin(origins = "http://localhost:4200")
