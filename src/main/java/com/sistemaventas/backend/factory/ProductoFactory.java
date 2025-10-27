@@ -27,23 +27,42 @@ public abstract class ProductoFactory {
     
     // Método común para validaciones básicas
     protected void validarProductoBase(ProductoRequest request) {
-        System.out.println("ProductoFactory: Validando producto base");
-        if (request == null) {
-            throw new IllegalArgumentException("El request no puede ser null");
+        System.out.println("=== INICIO VALIDACIÓN PRODUCTO BASE ===");
+        System.out.println("Request a validar: " + request);
+        
+        try {
+            if (request == null) {
+                throw new IllegalArgumentException("El request no puede ser null");
+            }
+            
+            System.out.println("Validando descripción: " + request.getDescripcion());
+            if (request.getDescripcion() == null || request.getDescripcion().trim().isEmpty()) {
+                throw new IllegalArgumentException("La descripción del producto es obligatoria");
+            }
+            
+            System.out.println("Validando precio unitario: " + request.getPrecioUnitario());
+            if (request.getPrecioUnitario() == null || request.getPrecioUnitario().doubleValue() <= 0) {
+                throw new IllegalArgumentException("El precio unitario debe ser mayor a 0");
+            }
+            
+            System.out.println("Validando cantidad disponible: " + request.getCantidadDisponible());
+            if (request.getCantidadDisponible() == null || request.getCantidadDisponible() < 0) {
+                throw new IllegalArgumentException("La cantidad disponible no puede ser negativa");
+            }
+            
+            System.out.println("Validando categoría: " + request.getCategoria());
+            if (request.getCategoria() == null || request.getCategoria().trim().isEmpty()) {
+                throw new IllegalArgumentException("La categoría es obligatoria");
+            }
+            
+            System.out.println("Validaciones básicas completadas exitosamente");
+            
+        } catch (Exception e) {
+            System.err.println("Error en validación de producto: " + e.getMessage());
+            throw e;
+        } finally {
+            System.out.println("=== FIN VALIDACIÓN PRODUCTO BASE ===");
         }
-        System.out.println("ProductoFactory: Validando descripción");
-        if (request.getDescripcion() == null || request.getDescripcion().trim().isEmpty()) {
-            throw new IllegalArgumentException("La descripción del producto es obligatoria");
-        }
-        System.out.println("ProductoFactory: Validando precio unitario");
-        if (request.getPrecioUnitario() == null || request.getPrecioUnitario().doubleValue() <= 0) {
-            throw new IllegalArgumentException("El precio unitario debe ser mayor a 0");
-        }
-        System.out.println("ProductoFactory: Validando cantidad disponible");
-        if (request.getCantidadDisponible() == null || request.getCantidadDisponible() < 0) {
-            throw new IllegalArgumentException("La cantidad disponible no puede ser negativa");
-        }
-        System.out.println("ProductoFactory: Validaciones básicas completadas exitosamente");
     }
     
     // Método común para crear producto base

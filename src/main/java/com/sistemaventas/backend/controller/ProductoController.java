@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sistemaventas.backend.dto.request.ProductoRequest;
+import com.sistemaventas.backend.dto.response.ApiResponse;
 import com.sistemaventas.backend.dto.response.ProductoResponse;
 import com.sistemaventas.backend.entity.Producto;
 import com.sistemaventas.backend.service.ProductoService;
@@ -39,27 +40,28 @@ public class ProductoController {
     private ProductoService productoService;
     
     @GetMapping
-    public ResponseEntity<List<ProductoResponse>> obtenerTodosLosProductos() {
+    public ResponseEntity<ApiResponse<List<ProductoResponse>>> obtenerTodosLosProductos() {
         try {
             List<Producto> productos = productoService.obtenerTodosLosProductos();
             List<ProductoResponse> productosResponse = productos.stream()
                 .map(this::convertirAResponse)
                 .collect(Collectors.toList());
-            return ResponseEntity.ok(productosResponse);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Productos obtenidos exitosamente", productosResponse));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<ProductoResponse> obtenerProductoPorId(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<ProductoResponse>> obtenerProductoPorId(@PathVariable Integer id) {
         try {
             Optional<Producto> producto = productoService.buscarPorId(id);
             if (producto.isPresent()) {
                 ProductoResponse productoResponse = convertirAResponse(producto.get());
-                return ResponseEntity.ok(productoResponse);
+                return ResponseEntity.ok(new ApiResponse<>(true, "Producto encontrado", productoResponse));
             } else {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(false, "Producto no encontrado", null));
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -69,18 +71,52 @@ public class ProductoController {
     @PostMapping
     public ResponseEntity<?> crearProducto(@Valid @RequestBody ProductoRequest productoRequest) {
         try {
-            System.out.println("Recibiendo request para crear producto: " + productoRequest);
+            System.out.println("=== INICIO CREAR PRODUCTO ===");
+            System.out.println("Request recibido: " + productoRequest);
+            
+            // Validar estructura básica del request
+            if (productoRequest == null) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, "El request no puede ser null", null));
+            }
+            
+            // Intentar crear el producto
             Producto nuevoProducto = productoService.crearProducto(productoRequest);
+            
+            if (nuevoProducto == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(false, "Error: no se pudo crear el producto", null));
+            }
+            
+            System.out.println("Producto creado en servicio: " + nuevoProducto);
+            
+            // Convertir a DTO de respuesta
             ProductoResponse productoResponse = convertirAResponse(nuevoProducto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(productoResponse);
+            System.out.println("Response generado: " + productoResponse);
+            
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, "Producto creado exitosamente", productoResponse));
+                
         } catch (IllegalArgumentException e) {
-            System.err.println("Error de validación al crear producto: " + e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Error inesperado al crear producto: " + e.getMessage());
-            e.printStackTrace();
+            String mensaje = "Error de validación: " + e.getMessage();
+            System.err.println("ProductoController: " + mensaje);
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse<>(false, mensaje, null));
+                
+        } catch (RuntimeException e) {
+            String mensaje = "Error al procesar producto: " + e.getMessage();
+            System.err.println("ProductoController: " + mensaje);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error al procesar producto: " + e.getMessage());
+                .body(new ApiResponse<>(false, mensaje, null));
+                
+        } catch (Exception e) {
+            String mensaje = "Error inesperado al crear producto: " + e.getMessage();
+            System.err.println("ProductoController: " + mensaje);
+            System.err.println("ProductoController: Tipo de error: " + e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse<>(false, mensaje, null));
+        } finally {
+            System.out.println("=== FIN CREAR PRODUCTO ===");
         }
     }
     

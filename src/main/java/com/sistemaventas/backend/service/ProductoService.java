@@ -26,42 +26,92 @@ public class ProductoService {
     // Crear producto usando Factory Method Pattern
     @Transactional
     public Producto crearProducto(ProductoRequest productoRequest) {
-        System.out.println("ProductoService: Iniciando creación de producto en transacción");
-        
-        // Validaciones básicas
-        if (productoRequest == null) {
-            throw new IllegalArgumentException("El request no puede ser null");
-        }
-        
-        // Generar nuevo ID si no se proporciona
-        if (productoRequest.getIdProducto() == null) {
-            Integer nuevoId = generarNuevoId();
-            System.out.println("ProductoService: Generando nuevo ID: " + nuevoId);
-            productoRequest.setIdProducto(nuevoId);
-        }
-
-        // Verificar que no exista ya un producto con ese ID
-        if (productoRepository.existsById(productoRequest.getIdProducto())) {
-            throw new RuntimeException("Ya existe un producto con ID: " + productoRequest.getIdProducto());
-        }
-
-        // Usar Factory Method para crear el producto según la categoría
+        System.out.println("=== INICIO SERVICIO CREAR PRODUCTO ===");
         try {
+            System.out.println("Request recibido en servicio: " + productoRequest);
+            
+            // Validaciones básicas
+            if (productoRequest == null) {
+                throw new IllegalArgumentException("El request no puede ser null");
+            }
+            
+            if (productoRequest.getDescripcion() == null || productoRequest.getDescripcion().trim().isEmpty()) {
+                throw new IllegalArgumentException("La descripción del producto es obligatoria");
+            }
+            
+            if (productoRequest.getPrecioUnitario() == null || productoRequest.getPrecioUnitario().doubleValue() <= 0) {
+                throw new IllegalArgumentException("El precio unitario debe ser mayor a 0");
+            }
+            
+            if (productoRequest.getCantidadDisponible() == null || productoRequest.getCantidadDisponible() < 0) {
+                throw new IllegalArgumentException("La cantidad disponible no puede ser negativa");
+            }
+            
+            if (productoRequest.getCategoria() == null || productoRequest.getCategoria().trim().isEmpty()) {
+                throw new IllegalArgumentException("La categoría es obligatoria");
+            }
+            
+            // Generar nuevo ID si no se proporciona o es 0
+            if (productoRequest.getIdProducto() == null || productoRequest.getIdProducto() == 0) {
+                Integer nuevoId = generarNuevoId();
+                System.out.println("ProductoService: Generando nuevo ID: " + nuevoId);
+                productoRequest.setIdProducto(nuevoId);
+            } else {
+                // Verificar que no exista ya un producto con ese ID
+                if (productoRepository.existsById(productoRequest.getIdProducto())) {
+                    throw new IllegalArgumentException("Ya existe un producto con ID: " + productoRequest.getIdProducto());
+                }
+            }
+
+            // Usar Factory Method para crear el producto según la categoría
             System.out.println("ProductoService: Creando factory para categoría: " + productoRequest.getCategoria());
-            ProductoFactory factory = ProductoFactory.obtenerFactory(productoRequest.getCategoria());
+            ProductoFactory productoFactory;
+            try {
+                productoFactory = ProductoFactory.obtenerFactory(productoRequest.getCategoria());
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Categoría de producto no válida: " + productoRequest.getCategoria());
+            }
             
             System.out.println("ProductoService: Creando producto usando factory");
-            Producto producto = factory.crearProducto(productoRequest);
+            Producto producto;
+            try {
+                producto = productoFactory.crearProducto(productoRequest);
+            } catch (IllegalArgumentException e) {
+                throw e; // Reenviar errores de validación
+            } catch (Exception e) {
+                throw new RuntimeException("Error al crear el producto usando factory: " + e.getMessage());
+            }
             
+            if (producto == null) {
+                throw new RuntimeException("Error: el factory no pudo crear el producto");
+            }
+            
+            // Guardar en la base de datos
             System.out.println("ProductoService: Guardando producto en base de datos");
-            Producto productoGuardado = productoRepository.save(producto);
-            System.out.println("ProductoService: Producto guardado exitosamente con ID: " + productoGuardado.getIdProducto());
+            Producto productoGuardado;
+            try {
+                productoGuardado = productoRepository.save(producto);
+            } catch (Exception e) {
+                throw new RuntimeException("Error al guardar el producto en la base de datos: " + e.getMessage());
+            }
             
+            System.out.println("ProductoService: Producto guardado exitosamente con ID: " + productoGuardado.getIdProducto());
             return productoGuardado;
-        } catch (Exception e) {
-            System.err.println("ProductoService: Error al crear producto: " + e.getMessage());
-            e.printStackTrace();
+            
+        } catch (IllegalArgumentException e) {
+            String mensaje = "Error de validación al crear producto: " + e.getMessage();
+            System.err.println("ProductoService: " + mensaje);
             throw e;
+        } catch (RuntimeException e) {
+            System.err.println("ProductoService: Error interno - " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            String mensaje = "Error inesperado al crear producto: " + e.getMessage();
+            System.err.println("ProductoService: " + mensaje);
+            System.err.println("ProductoService: Tipo de error: " + e.getClass().getSimpleName());
+            throw new RuntimeException(mensaje, e);
+        } finally {
+            System.out.println("=== FIN SERVICIO CREAR PRODUCTO ===");
         }
     }
 
