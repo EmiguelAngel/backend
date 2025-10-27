@@ -1,11 +1,11 @@
 package com.sistemaventas.backend.dto.request;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
-import java.math.BigDecimal;
 
 public class ProductoRequest {
     
@@ -21,6 +21,7 @@ public class ProductoRequest {
     @Size(max = 1024, message = "La descripción no puede exceder 1024 caracteres")
     private String descripcion;
     
+    @NotBlank(message = "La categoría es obligatoria")
     @Size(max = 100, message = "La categoría no puede exceder 100 caracteres")
     private String categoria;
     

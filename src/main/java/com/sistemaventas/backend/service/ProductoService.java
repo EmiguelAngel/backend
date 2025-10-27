@@ -24,10 +24,19 @@ public class ProductoService {
     private InventarioNotificationService notificationService;
 
     // Crear producto usando Factory Method Pattern
+    @Transactional
     public Producto crearProducto(ProductoRequest productoRequest) {
+        System.out.println("ProductoService: Iniciando creación de producto en transacción");
+        
+        // Validaciones básicas
+        if (productoRequest == null) {
+            throw new IllegalArgumentException("El request no puede ser null");
+        }
+        
         // Generar nuevo ID si no se proporciona
         if (productoRequest.getIdProducto() == null) {
             Integer nuevoId = generarNuevoId();
+            System.out.println("ProductoService: Generando nuevo ID: " + nuevoId);
             productoRequest.setIdProducto(nuevoId);
         }
 
@@ -37,11 +46,23 @@ public class ProductoService {
         }
 
         // Usar Factory Method para crear el producto según la categoría
-        ProductoFactory factory = ProductoFactory.obtenerFactory(productoRequest.getCategoria());
-        Producto producto = factory.crearProducto(productoRequest);
-
-        // Guardar en la base de datos
-        return productoRepository.save(producto);
+        try {
+            System.out.println("ProductoService: Creando factory para categoría: " + productoRequest.getCategoria());
+            ProductoFactory factory = ProductoFactory.obtenerFactory(productoRequest.getCategoria());
+            
+            System.out.println("ProductoService: Creando producto usando factory");
+            Producto producto = factory.crearProducto(productoRequest);
+            
+            System.out.println("ProductoService: Guardando producto en base de datos");
+            Producto productoGuardado = productoRepository.save(producto);
+            System.out.println("ProductoService: Producto guardado exitosamente con ID: " + productoGuardado.getIdProducto());
+            
+            return productoGuardado;
+        } catch (Exception e) {
+            System.err.println("ProductoService: Error al crear producto: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     // Obtener todos los productos
@@ -178,14 +199,18 @@ public class ProductoService {
 
     // Método auxiliar para generar nuevo ID
     private Integer generarNuevoId() {
-        List<Producto> productos = productoRepository.findAll();
-        if (productos.isEmpty()) {
+        try {
+            Integer maxId = productoRepository.findMaxId();
+            if (maxId == null || maxId == 0) {
+                return 1;
+            }
+            return maxId + 1;
+        } catch (Exception e) {
+            // En caso de cualquier problema con la consulta, caer en un fallback
+            System.err.println("ProductoService: No se pudo obtener maxId desde repositorio, usando fallback (1)");
+            e.printStackTrace();
             return 1;
         }
-        return productos.stream()
-                .mapToInt(Producto::getIdProducto)
-                .max()
-                .orElse(0) + 1;
     }
 
     // Métodos de demostración (opcionales)

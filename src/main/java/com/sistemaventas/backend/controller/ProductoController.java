@@ -67,13 +67,20 @@ public class ProductoController {
     }
     
     @PostMapping
-    public ResponseEntity<ProductoResponse> crearProducto(@Valid @RequestBody ProductoRequest productoRequest) {
+    public ResponseEntity<?> crearProducto(@Valid @RequestBody ProductoRequest productoRequest) {
         try {
+            System.out.println("Recibiendo request para crear producto: " + productoRequest);
             Producto nuevoProducto = productoService.crearProducto(productoRequest);
             ProductoResponse productoResponse = convertirAResponse(nuevoProducto);
             return ResponseEntity.status(HttpStatus.CREATED).body(productoResponse);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error de validación al crear producto: " + e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            System.err.println("Error inesperado al crear producto: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al procesar producto: " + e.getMessage());
         }
     }
     

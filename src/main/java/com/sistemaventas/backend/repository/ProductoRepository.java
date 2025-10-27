@@ -1,13 +1,14 @@
 package com.sistemaventas.backend.repository;
 
-import com.sistemaventas.backend.entity.Producto;
+import java.math.BigDecimal;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
+import com.sistemaventas.backend.entity.Producto;
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Integer> {
@@ -47,6 +48,10 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer> {
     // Obtener todas las categorías únicas
     @Query("SELECT DISTINCT p.categoria FROM Producto p ORDER BY p.categoria")
     List<String> findDistinctCategorias();
+    
+       // Obtener el valor máximo actual de IDPRODUCTO (seguro para generar nuevos IDs)
+       @Query("SELECT COALESCE(MAX(p.idProducto), 0) FROM Producto p")
+       Integer findMaxId();
     
     // Contar productos por categoría
     @Query("SELECT COUNT(p) FROM Producto p WHERE p.categoria = :categoria")
