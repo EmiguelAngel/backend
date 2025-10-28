@@ -152,27 +152,60 @@ public class ProductoService {
 
     // Actualizar producto
     public Producto actualizarProducto(Integer id, ProductoRequest productoRequest) {
+        System.out.println("=== ACTUALIZAR PRODUCTO ===");
+        System.out.println("ID a actualizar: " + id);
+        System.out.println("Request: " + productoRequest);
+        
         Optional<Producto> productoExistente = productoRepository.findById(id);
 
         if (productoExistente.isEmpty()) {
+            System.err.println("❌ ERROR: Producto no encontrado con ID: " + id);
             throw new RuntimeException("Producto no encontrado con ID: " + id);
         }
+        
+        System.out.println("✅ Producto encontrado: " + productoExistente.get().getDescripcion());
 
-        // Crear producto actualizado usando Factory
-        productoRequest.setIdProducto(id);
-        ProductoFactory factory = ProductoFactory.obtenerFactory(productoRequest.getCategoria());
-        Producto productoActualizado = factory.crearProducto(productoRequest);
-
-        return productoRepository.save(productoActualizado);
+        try {
+            // Crear producto actualizado usando Factory
+            productoRequest.setIdProducto(id);
+            System.out.println("Obteniendo factory para categoría: " + productoRequest.getCategoria());
+            ProductoFactory factory = ProductoFactory.obtenerFactory(productoRequest.getCategoria());
+            
+            System.out.println("Creando producto actualizado con factory");
+            Producto productoActualizado = factory.crearProducto(productoRequest);
+            
+            System.out.println("Guardando producto actualizado en BD");
+            Producto resultado = productoRepository.save(productoActualizado);
+            System.out.println("✅ Producto actualizado exitosamente");
+            
+            return resultado;
+        } catch (Exception e) {
+            System.err.println("❌ ERROR actualizando producto: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error actualizando producto: " + e.getMessage(), e);
+        }
     }
 
     // Eliminar producto
     public boolean eliminarProducto(Integer id) {
-        if (productoRepository.existsById(id)) {
-            productoRepository.deleteById(id);
-            return true;
+        System.out.println("=== ELIMINAR PRODUCTO ===");
+        System.out.println("ID a eliminar: " + id);
+        
+        try {
+            if (productoRepository.existsById(id)) {
+                System.out.println("✅ Producto existe, procediendo a eliminar");
+                productoRepository.deleteById(id);
+                System.out.println("✅ Producto eliminado exitosamente");
+                return true;
+            } else {
+                System.err.println("❌ Producto no encontrado con ID: " + id);
+                return false;
+            }
+        } catch (Exception e) {
+            System.err.println("❌ ERROR eliminando producto: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error eliminando producto: " + e.getMessage(), e);
         }
-        return false;
     }
 
     // Actualizar stock de producto (CON OBSERVER PATTERN)

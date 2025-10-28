@@ -259,16 +259,32 @@ public class VentasFacade {
      * PASO 5: Actualizar inventario y notificar observadores
      */
     private void actualizarInventarioYNotificar(List<DetalleValidado> detallesValidados) {
+        System.out.println("📦 === ACTUALIZANDO INVENTARIO ===");
+        System.out.println("Total de items a actualizar: " + detallesValidados.size());
+        
+        int index = 1;
         for (DetalleValidado detalle : detallesValidados) {
             try {
+                System.out.println("\n🔄 Item " + index + "/" + detallesValidados.size());
+                System.out.println("   Producto: " + detalle.getProducto().getDescripcion());
+                System.out.println("   ID: " + detalle.getProducto().getIdProducto());
+                System.out.println("   Cantidad a reducir: " + detalle.getCantidad());
+                System.out.println("   Stock actual: " + detalle.getProducto().getCantidadDisponible());
+                
                 // Reducir stock usando ProductoService (que ya tiene Observer integrado)
                 productoService.reducirStock(detalle.getProducto().getIdProducto(), detalle.getCantidad());
                 
+                System.out.println("   ✅ Stock reducido exitosamente");
+                index++;
+                
             } catch (Exception e) {
+                System.err.println("   ❌ ERROR reduciendo stock: " + e.getMessage());
                 throw new RuntimeException("Error actualizando stock para " + 
                         detalle.getProducto().getDescripcion() + ": " + e.getMessage());
             }
         }
+        
+        System.out.println("\n✅ === INVENTARIO ACTUALIZADO COMPLETAMENTE ===");
     }
     
     /**

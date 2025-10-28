@@ -124,12 +124,21 @@ public class ProductoController {
     public ResponseEntity<ProductoResponse> actualizarProducto(@PathVariable Integer id,
                                                                @Valid @RequestBody ProductoRequest productoRequest) {
         try {
+            // Validar que el ID sea válido
+            if (id == null || id <= 0) {
+                System.err.println("❌ ID inválido recibido: " + id);
+                return ResponseEntity.badRequest().body(null);
+            }
+            
+            System.out.println("📝 Solicitud de actualización para producto ID: " + id);
             Producto productoActualizado = productoService.actualizarProducto(id, productoRequest);
             ProductoResponse productoResponse = convertirAResponse(productoActualizado);
             return ResponseEntity.ok(productoResponse);
         } catch (RuntimeException e) {
+            System.err.println("❌ Error en actualización: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
+            System.err.println("❌ Error interno: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -137,6 +146,13 @@ public class ProductoController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarProducto(@PathVariable Integer id) {
         try {
+            // Validar que el ID sea válido
+            if (id == null || id <= 0) {
+                System.err.println("❌ ID inválido recibido para eliminar: " + id);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            System.out.println("🗑️ Solicitud de eliminación para producto ID: " + id);
             boolean eliminado = productoService.eliminarProducto(id);
             if (eliminado) {
                 return ResponseEntity.noContent().build();
@@ -144,6 +160,7 @@ public class ProductoController {
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
+            System.err.println("❌ Error eliminando: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

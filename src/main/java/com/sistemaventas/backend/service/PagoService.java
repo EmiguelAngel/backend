@@ -100,6 +100,11 @@ public class PagoService {
         // Validaciones específicas por método de pago
         String metodo = datosPago.getMetodoPago().toLowerCase();
         
+        // Mercado Pago no requiere validación de tarjeta porque ya fue procesado
+        if (metodo.equals("mercado_pago") || metodo.equals("mercado pago")) {
+            return; // No validar datos de tarjeta
+        }
+        
         if (metodo.contains("tarjeta") || metodo.contains("credito") || metodo.contains("debito")) {
             validarDatosTarjeta(datosPago);
         }
@@ -131,16 +136,21 @@ public class PagoService {
                 return procesarPagoEfectivo(monto);
             }
                 
-            case "tarjeta credito", "tarjeta crédito" -> {
+            case "tarjeta credito", "tarjeta crédito", "tarjeta_credito" -> {
                 return procesarPagoTarjetaCredito(datosPago, monto);
             }
-            case "tarjeta debito", "tarjeta débito" -> {
+            case "tarjeta debito", "tarjeta débito", "tarjeta_debito" -> {
                 return procesarPagoTarjetaDebito(datosPago, monto);
             }
                 
             case "transferencia" -> {
                 return procesarPagoTransferencia(monto);
             }
+            
+            case "mercado_pago", "mercado pago" -> {
+                return procesarPagoMercadoPago(monto);
+            }
+            
             default -> {
                 System.out.println("⚠️ Método de pago no reconocido, procesando como genérico");
                 return true; // Por defecto aceptar
@@ -213,6 +223,15 @@ public class PagoService {
         }
         
         return exitoso;
+    }
+    
+    private boolean procesarPagoMercadoPago(BigDecimal monto) {
+        System.out.println("🔵 Procesando pago con Mercado Pago:");
+        System.out.println("   Monto: $" + monto);
+        
+        // El pago ya fue aprobado por Mercado Pago, solo registramos
+        System.out.println("✅ Pago con Mercado Pago confirmado");
+        return true;
     }
     
     // Simular delay de procesamiento
