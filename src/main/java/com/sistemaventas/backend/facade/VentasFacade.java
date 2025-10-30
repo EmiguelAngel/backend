@@ -81,7 +81,7 @@ public class VentasFacade {
             System.out.println("✅ Productos validados - Subtotal: $" + subtotal);
             
             // PASO 3: Crear factura con detalles (sin guardar aún)
-            Factura factura = crearFactura(usuario, detallesValidados, subtotal);
+            Factura factura = crearFactura(usuario, detallesValidados, subtotal, ventaRequest);
             System.out.println("✅ Factura creada - ID temporal: " + factura.getIdFactura() + ", Total: $" + factura.getTotal());
             
             // PASO 4: Guardar factura primero (necesaria para el pago)
@@ -211,7 +211,7 @@ public class VentasFacade {
     /**
      * PASO 3: Crear factura con todos los detalles
      */
-    private Factura crearFactura(Usuario usuario, List<DetalleValidado> detallesValidados, BigDecimal subtotal) {
+    private Factura crearFactura(Usuario usuario, List<DetalleValidado> detallesValidados, BigDecimal subtotal, VentaRequest ventaRequest) {
         Factura factura = new Factura();
         factura.setUsuario(usuario);
         factura.setFecha(new Date());
@@ -224,6 +224,12 @@ public class VentasFacade {
         // Calcular total
         BigDecimal total = subtotal.add(iva);
         factura.setTotal(total);
+        
+        // Guardar payment_id si existe (para pagos con Mercado Pago)
+        if (ventaRequest.getPaymentId() != null && !ventaRequest.getPaymentId().isEmpty()) {
+            factura.setPaymentId(ventaRequest.getPaymentId());
+            System.out.println("💳 Payment ID de Mercado Pago guardado: " + ventaRequest.getPaymentId());
+        }
         
         // Crear detalles de factura
         List<DetalleFactura> detallesFactura = new ArrayList<>();

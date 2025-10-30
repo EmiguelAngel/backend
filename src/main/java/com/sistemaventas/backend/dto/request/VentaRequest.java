@@ -1,10 +1,10 @@
 package com.sistemaventas.backend.dto.request;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-
-import java.util.List;
 
 public class VentaRequest {
     
@@ -18,6 +18,8 @@ public class VentaRequest {
     @NotNull(message = "Los datos de pago son obligatorios")
     @Valid
     private DatosPago datosPago;
+    
+    private String paymentId; // ID del pago de Mercado Pago (opcional)
     
     // Constructores
     public VentaRequest() {}
@@ -51,6 +53,14 @@ public class VentaRequest {
     
     public void setDatosPago(DatosPago datosPago) {
         this.datosPago = datosPago;
+    }
+    
+    public String getPaymentId() {
+        return paymentId;
+    }
+    
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
     }
     
     @Override

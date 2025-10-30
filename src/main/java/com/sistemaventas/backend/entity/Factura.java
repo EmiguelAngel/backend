@@ -60,6 +60,12 @@ public class Factura {
     @DecimalMin(value = "0.0", message = "El total debe ser mayor a 0")
     private BigDecimal total;
     
+    @Column(name = "payment_id", length = 100)
+    private String paymentId; // ID del pago en Mercado Pago
+    
+    @Column(name = "devuelta")
+    private Boolean devuelta = false; // Indica si la factura fue devuelta
+    
     @OneToMany(mappedBy = "factura", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DetalleFactura> detallesFactura = new ArrayList<>();
     
@@ -153,6 +159,22 @@ public class Factura {
     
     public void setPago(Pago pago) {
         this.pago = pago;
+    }
+    
+    public String getPaymentId() {
+        return paymentId;
+    }
+    
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
+    }
+    
+    public Boolean getDevuelta() {
+        return devuelta;
+    }
+    
+    public void setDevuelta(Boolean devuelta) {
+        this.devuelta = devuelta;
     }
     
     // Métodos de utilidad
